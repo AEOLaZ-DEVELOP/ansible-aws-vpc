@@ -33,6 +33,7 @@
       register: BastionSG_out
     - debug:
         var: bastionHost_out
+    - debug:
         msg:
           - "VPC ID: {{ vpcid }}"
           - "Subnet ID: {{ pubsub1id }}"
