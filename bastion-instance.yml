@@ -47,5 +47,7 @@
         network:
           subnet_id: "{{ pubsub1id }}"
           assign_public_ip: true
-          security_group: "{{ BastionSG_out.group_id }}"
+          security_group_ids:
+            - "{{ BastionSG_out.group_id }}"
+      register: bastionHost_out
     
