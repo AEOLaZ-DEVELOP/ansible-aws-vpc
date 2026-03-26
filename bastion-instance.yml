@@ -51,11 +51,8 @@
           Project: Vprofile
           Owner: DevOps Team
 
-        security_group: "{{ BastionSG_out.group_id }}"
-        network:
-          subnet_id: "{{ pubsub1id }}"
-          assign_public_ip: true
+        subnet_id: "{{ pubsub1id }}"
+        security_groups:
+          - "{{ BastionSG_out.group_id }}"
 
       register: bastionHost_out
-    - debug:
-        var: bastionHost_out
