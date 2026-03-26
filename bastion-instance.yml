@@ -32,7 +32,7 @@
             cidr_ip: "{{MYIP}}"
       register: BastionSG_out
     - name: Creating Bastion Host
-      ec2:
+      eamazon.aws.ec2_instance2:
         key_name: vprofile-key
         region: "{{region}}"
         instance_type: t3.micro
