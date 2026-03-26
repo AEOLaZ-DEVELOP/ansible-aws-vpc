@@ -32,8 +32,6 @@
             cidr_ip: "{{MYIP}}"
       register: BastionSG_out
     - debug:
-        var: bastionHost_out
-    - debug:
         msg:
           - "VPC ID: {{ vpcid }}"
           - "Subnet ID: {{ pubsub1id }}"
@@ -48,7 +46,7 @@
         wait: yes
         wait_timeout: 300
         exact_count: 1
-        count_tag:
+        tags:
           Name: Bastion_host
           Project: Vprofile
           Owner: DevOps Team
@@ -57,3 +55,5 @@
           subnet_id: "{{ pubsub1id }}"
           assign_public_ip: true
       register: bastionHost_out
+    - debug:
+        var: bastionHost_out
