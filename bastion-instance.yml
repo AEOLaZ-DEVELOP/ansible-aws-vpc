@@ -56,3 +56,5 @@
           - "{{ BastionSG_out.group_id }}"
 
       register: bastionHost_out
+    - debug:
+        var: bastionHost_out
