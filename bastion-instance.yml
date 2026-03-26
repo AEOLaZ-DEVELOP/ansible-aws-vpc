@@ -38,7 +38,7 @@
           - "SG ID: {{ BastionSG_out.group_id }}"
     - name: Creating Bastion Host
       amazon.aws.ec2_instance:
-        name: Bastion_host
+        name: Bastion_host_new
         key_name: vprofile-key
         region: "{{ region }}"
         instance_type: t3.micro
@@ -47,7 +47,7 @@
         wait_timeout: 300
 
         tags:
-          Name: Bastion_host
+          Name: Bastion_host_new
           Project: Vprofile
           Owner: DevOps Team
 
