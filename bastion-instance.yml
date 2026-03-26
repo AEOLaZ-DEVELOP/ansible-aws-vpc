@@ -31,6 +31,11 @@
             to_port: 22
             cidr_ip: "{{MYIP}}"
       register: BastionSG_out
+    - debug:
+        msg:
+          - "VPC ID: {{ vpcid }}"
+          - "Subnet ID: {{ pubsub1id }}"
+          - "SG ID: {{ BastionSG_out.group_id }}"
     - name: Creating Bastion Host
       amazon.aws.ec2_instance:
         name: Bastion_host
