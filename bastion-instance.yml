@@ -30,12 +30,12 @@
             from_port: 22
             to_port: 22
             cidr_ip: "{{MYIP}}"
-        register: BastionSG_out
+      register: BastionSG_out
     - name: Creating Bastion Host
       ec2:
         key_name: vprofile-key
         region: "{{region}}"
-        instance_type: t2.micro
+        instance_type: t2.small
         image: "{{ bastion_ami }}"
         wait: yes
         wait_timeout: 300
