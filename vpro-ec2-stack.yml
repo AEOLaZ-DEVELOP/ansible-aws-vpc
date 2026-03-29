@@ -169,7 +169,7 @@
           app01_ip: {{ app01_out.instances[0].private_ip_address }}
           rmq01_ip: {{ rmq01_out.instances[0].private_ip_address }}
           mc01_ip: {{ mc01_out.instances[0].private_ip_address }}
-          db01_ip: {{ db01_out.instances[0].private_ip_address }}
+        # db01_ip: {{ db01_out.instances[0].private_ip_address }}
       register: hostsfile_out
     - name: Debug file update result
       debug:
@@ -188,7 +188,6 @@
           app01 ansible_host={{ app01_out.instances[0].private_ip_address }}
           rmq01 ansible_host={{ rmq01_out.instances[0].private_ip_address }}
           mc01 ansible_host={{ mc01_out.instances[0].private_ip_address }}
-          db01 ansible_host={{ db01_out.instances[0].private_ip_address }}
           cntl ansible_host=127.0.0.1 ansible_connection=local
 
           [websrvgrp]
@@ -203,8 +202,7 @@
           [mcsrvgrp]
           mc01
 
-          [dbsrvgrp]
-          db01
+          
 
           [control]
           cntl
@@ -221,4 +219,7 @@
           ansible_ssh_private_key_file=loginkey_vpro.pem
           #ansible_python_interpreter=/usr/bin/python3
 
+        # db01 ansible_host={{ db01_out.instances[0].private_ip_address }}
+        # [dbsrvgrp]
+        # db01
 
