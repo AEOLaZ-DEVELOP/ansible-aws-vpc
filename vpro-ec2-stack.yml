@@ -62,7 +62,7 @@
       amazon.aws.ec2_instance:
         key_name: vprofile-key
         region: "{{region}}"
-        instance_type: t2.micro
+        instance_type: t3.micro
         image_id: "{{nginx_ami}}"
         wait: yes
         wait_timeout: 300
@@ -78,7 +78,7 @@
       amazon.aws.ec2_instance:
         key_name: vprofile-key
         region: "{{region}}"
-        instance_type: t2.micro
+        instance_type: t3.micro
         image_id: "{{tomcat_ami}}"
         wait: yes
         wait_timeout: 300
@@ -94,7 +94,7 @@
       amazon.aws.ec2_instance:
         key_name: vprofile-key
         region: "{{region}}"
-        instance_type: t2.micro
+        instance_type: t3.micro
         image_id: "{{memcache_ami}}"
         wait: yes
         wait_timeout: 300
@@ -110,7 +110,7 @@
       amazon.aws.ec2_instance:
         key_name: vprofile-key
         region: "{{region}}"
-        instance_type: t2.micro
+        instance_type: t3.micro
         image_id: "{{rmq_ami}}"
         wait: yes
         wait_timeout: 300
@@ -122,19 +122,19 @@
           - "{{vproStackSG_out.group_id}}"
         subnet_id: "{{privsub1id}}"
       register: rmq01_out
-    - name: Creating Mysql db01
-      amazon.aws.ec2_instance:
-        key_name: vprofile-key
-        region: "{{region}}"
-        instance_type: t2.micro
-        image_id: "{{mysql_ami}}"
-        wait: yes
-        wait_timeout: 300
-        tags:
-          Name: "db01"
-          Project: Vprofile
-          Owner: DevOps Team
-        security_groups: 
-          - "{{vproStackSG_out.group_id}}"
-        subnet_id: "{{privsub1id}}"
-      register: db01_out
+    # - name: Creating Mysql db01
+    #   amazon.aws.ec2_instance:
+    #     key_name: vprofile-key
+    #     region: "{{region}}"
+    #     instance_type: t3.micro
+    #     image_id: "{{mysql_ami}}"
+    #     wait: yes
+    #     wait_timeout: 300
+    #     tags:
+    #       Name: "db01"
+    #       Project: Vprofile
+    #       Owner: DevOps Team
+    #     security_groups: 
+    #       - "{{vproStackSG_out.group_id}}"
+    #     subnet_id: "{{privsub1id}}"
+    #   register: db01_out
