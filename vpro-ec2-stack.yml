@@ -123,23 +123,23 @@
         subnet_id: "{{privsub1id}}"
       register: rmq01_out
     # - name: Creating Mysql db01
-    #   amazon.aws.ec2_instance:
-    #     key_name: vprofile-key
-    #     region: "{{region}}"
-    #     instance_type: t3.micro
-    #     image_id: "{{mysql_ami}}"
-    #     wait: yes
-    #     wait_timeout: 300
-    #     tags:
-    #       Name: "db01"
-    #       Project: Vprofile
-    #       Owner: DevOps Team
-    #     security_groups: 
-    #       - "{{vproStackSG_out.group_id}}"
-    #     subnet_id: "{{privsub1id}}"
-    #   register: db01_out
+      # amazon.aws.ec2_instance:
+      #   key_name: vprofile-key
+      #   region: "{{region}}"
+      #   instance_type: t3.micro
+      #   image_id: "{{mysql_ami}}"
+      #   wait: yes
+      #   wait_timeout: 300
+      #   tags:
+      #     Name: "db01"
+      #     Project: Vprofile
+      #     Owner: DevOps Team
+      #   security_groups: 
+      #     - "{{vproStackSG_out.group_id}}"
+      #   subnet_id: "{{privsub1id}}"
+      # register: db01_out
     # - debug:
-    #     var: db01_out.tagged_instances[0].id
+      #   var: db01_out.tagged_instances[0].id
     - local_action:
         module: ec2_elb_lb
         name: "vprofile-elb"
@@ -159,8 +159,8 @@
             load_balancer_port: 80
             instance_port: 80
     # - name: Debug web01_out
-    #   debug:
-    #     var: web01_out
+      # debug:
+      #   var: web01_out
     - name: Insert/Update Hosts IP & Name in file provision-stack/group_vars/hostsip
       blockinfile:
         path: provision-stack/group_vars/hostsip
@@ -177,7 +177,7 @@
 
     - name: Copy login key to provision_stack directory
       copy:
-        src: loginkey_vpro.pem
+        src: bastion-key.pem
         dest: provision-stack/loginkey_vpro.pem
         mode: '0400'
     - name: Insert/Update Inventory file provision-stack/inventory-vpro
@@ -188,6 +188,7 @@
           app01 ansible_host={{ app01_out.instances[0].private_ip_address }}
           rmq01 ansible_host={{ rmq01_out.instances[0].private_ip_address }}
           mc01 ansible_host={{ mc01_out.instances[0].private_ip_address }}
+
           cntl ansible_host=127.0.0.1 ansible_connection=local
 
           [websrvgrp]
@@ -201,8 +202,6 @@
 
           [mcsrvgrp]
           mc01
-
-          
 
           [control]
           cntl
