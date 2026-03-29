@@ -157,6 +157,9 @@
           - protocol: http # options are http, https, ssl, tcp
             load_balancer_port: 80
             instance_port: 80
+    - name: Debug web01_out
+      debug:
+        var: web01_out
     # - name: Insert/Update Hosts IP & Name in file provision-stack/group_vars/hostsip
     #   blockinfile:
     #     path: provision-stack/group_vars/hostsip
