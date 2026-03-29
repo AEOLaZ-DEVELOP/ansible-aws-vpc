@@ -62,7 +62,7 @@
       amazon.aws.ec2_instance:
         key_name: vprofile-key
         region: "{{region}}"
-        instance_type: t3.micro
+        instance_type: t2.micro
         image_id: "{{nginx_ami}}"
         wait: yes
         wait_timeout: 300
@@ -78,7 +78,7 @@
       amazon.aws.ec2_instance:
         key_name: vprofile-key
         region: "{{region}}"
-        instance_type: t3.micro
+        instance_type: t2.micro
         image_id: "{{tomcat_ami}}"
         wait: yes
         wait_timeout: 300
@@ -94,7 +94,7 @@
       amazon.aws.ec2_instance:
         key_name: vprofile-key
         region: "{{region}}"
-        instance_type: t3.micro
+        instance_type: t2.micro
         image_id: "{{memcache_ami}}"
         wait: yes
         wait_timeout: 300
@@ -110,7 +110,7 @@
       amazon.aws.ec2_instance:
         key_name: vprofile-key
         region: "{{region}}"
-        instance_type: t3.micro
+        instance_type: t2.micro
         image_id: "{{rmq_ami}}"
         wait: yes
         wait_timeout: 300
@@ -126,7 +126,7 @@
       amazon.aws.ec2_instance:
         key_name: vprofile-key
         region: "{{region}}"
-        instance_type: t3.micro
+        instance_type: t2.micro
         image_id: "{{mysql_ami}}"
         wait: yes
         wait_timeout: 300
