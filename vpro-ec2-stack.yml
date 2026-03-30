@@ -51,10 +51,10 @@
             from_port: 8080
             to_port: 8080
             group_id: "{{vproELBSG_out.group_id}}"
-          - proto: tcp
-            from_port: 22
-            to_port: 22
-            group_id: "{{BastionSGid}}"
+        #  - proto: tcp
+        #    from_port: 22
+        #    to_port: 22
+        #    group_id: "{{BastionSGid}}"
       register: vproStackSG_out
     - name: Update Securiry Group with its own sg id
       amazon.aws.ec2_security_group:
@@ -183,7 +183,6 @@
     - name: Debug file update result
       debug:
         var: hostsfile_out
-
     - name: Copy login key to provision_stack directory
       copy:
         src: bastion-key.pem
