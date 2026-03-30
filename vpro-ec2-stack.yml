@@ -30,6 +30,10 @@
             from_port: 80
             to_port: 80
             cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            from_port: 8080
+            to_port: 8080
+            cidr_ip: 0.0.0.0/0
       register: vproELBSG_out
     - name: Create Securiry Group for Vprofile Stack
       amazon.aws.ec2_security_group:
@@ -42,6 +46,10 @@
           - proto: tcp
             from_port: 80
             to_port: 80
+            group_id: "{{vproELBSG_out.group_id}}"
+          - proto: tcp
+            from_port: 8080
+            to_port: 8080
             group_id: "{{vproELBSG_out.group_id}}"
           - proto: tcp
             from_port: 22
@@ -58,22 +66,22 @@
         rules:
           - proto: all
             group_id: "{{vproStackSG_out.group_id}}"
-    - name: Creating Nginx web01
-      amazon.aws.ec2_instance:
-        key_name: vprofile-key
-        region: "{{region}}"
-        instance_type: t3.micro
-        image_id: "{{nginx_ami}}"
-        wait: yes
-        wait_timeout: 300
-        tags:
-          Name: "web01"
-          Project: Vprofile
-          Owner: DevOps Team
-        security_groups: 
-          - "{{vproStackSG_out.group_id}}"
-        subnet_id: "{{privsub1id}}"
-      register: web01_out
+    # - name: Creating Nginx web01
+      # amazon.aws.ec2_instance:
+      #   key_name: vprofile-key
+      #   region: "{{region}}"
+      #   instance_type: t3.micro
+      #   image_id: "{{nginx_ami}}"
+      #   wait: yes
+      #   wait_timeout: 300
+      #   tags:
+      #     Name: "web01"
+      #     Project: Vprofile
+      #     Owner: DevOps Team
+      #   security_groups: 
+      #     - "{{vproStackSG_out.group_id}}"
+      #   subnet_id: "{{privsub1id}}"
+      #  register: web01_out
     - name: Creating tomcat app01
       amazon.aws.ec2_instance:
         key_name: vprofile-key
@@ -122,31 +130,31 @@
           - "{{vproStackSG_out.group_id}}"
         subnet_id: "{{privsub1id}}"
       register: rmq01_out
-    # - name: Creating Mysql db01
-      # amazon.aws.ec2_instance:
-      #   key_name: vprofile-key
-      #   region: "{{region}}"
-      #   instance_type: t3.micro
-      #   image_id: "{{mysql_ami}}"
-      #   wait: yes
-      #   wait_timeout: 300
-      #   tags:
-      #     Name: "db01"
-      #     Project: Vprofile
-      #     Owner: DevOps Team
-      #   security_groups: 
-      #     - "{{vproStackSG_out.group_id}}"
-      #   subnet_id: "{{privsub1id}}"
-      # register: db01_out
-    # - debug:
-      #   var: db01_out.tagged_instances[0].id
+    - name: Creating Mysql db01
+      amazon.aws.ec2_instance:
+        key_name: vprofile-key
+        region: "{{region}}"
+        instance_type: t3.micro
+        image_id: "{{mysql_ami}}"
+        wait: yes
+        wait_timeout: 300
+        tags:
+          Name: "db01"
+          Project: Vprofile
+          Owner: DevOps Team
+        security_groups: 
+          - "{{vproStackSG_out.group_id}}"
+        subnet_id: "{{privsub1id}}"
+      register: db01_out
+    - debug:
+        var: db01_out.instances[0].instance_id
     - local_action:
         module: ec2_elb_lb
         name: "vprofile-elb"
         region: "{{region}}"
         state: present
         instance_ids:
-          - "{{ web01_out.instances[0].instance_id }}"
+          - "{{ app01_out.instances[0].instance_id }}"
         purge_instance_ids: true
         security_group_ids: 
           - "{{ vproELBSG_out.group_id }}"
@@ -158,18 +166,19 @@
           - protocol: http # options are http, https, ssl, tcp
             load_balancer_port: 80
             instance_port: 80
-    # - name: Debug web01_out
-      # debug:
-      #   var: web01_out
+        listeners:
+          - protocol: http # options are http, https, ssl, tcp
+            load_balancer_port: 8080
+            instance_port: 8080
     - name: Insert/Update Hosts IP & Name in file provision-stack/group_vars/hostsip
       blockinfile:
         path: provision-stack/group_vars/hostsip
         block: |
-          web01_ip: {{ web01_out.instances[0].private_ip_address }}
           app01_ip: {{ app01_out.instances[0].private_ip_address }}
           rmq01_ip: {{ rmq01_out.instances[0].private_ip_address }}
           mc01_ip: {{ mc01_out.instances[0].private_ip_address }}
-        # db01_ip: {{ db01_out.instances[0].private_ip_address }}
+          db01_ip: {{ db01_out.instances[0].private_ip_address }}
+        # web01_ip: {{ web01_out.instances[0].private_ip_address }}
       register: hostsfile_out
     - name: Debug file update result
       debug:
@@ -184,10 +193,10 @@
       blockinfile:
         path: provision-stack/inventory-vpro
         block: |
-          web01 ansible_host={{ web01_out.instances[0].private_ip_address }}
           app01 ansible_host={{ app01_out.instances[0].private_ip_address }}
           rmq01 ansible_host={{ rmq01_out.instances[0].private_ip_address }}
           mc01 ansible_host={{ mc01_out.instances[0].private_ip_address }}
+          db01 ansible_host={{ db01_out.instances[0].private_ip_address }}
 
           cntl ansible_host=127.0.0.1 ansible_connection=local
 
@@ -218,7 +227,7 @@
           ansible_ssh_private_key_file=loginkey_vpro.pem
           #ansible_python_interpreter=/usr/bin/python3
 
-        # db01 ansible_host={{ db01_out.instances[0].private_ip_address }}
-        # [dbsrvgrp]
-        # db01
+        # web01 ansible_host={{ web01_out.instances[0].private_ip_address }}
+        # [websrvgrp]
+        # web01
 
