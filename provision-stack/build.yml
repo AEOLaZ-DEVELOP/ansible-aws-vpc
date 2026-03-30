@@ -13,7 +13,6 @@
         - openjdk-8-jdk
         - maven
 
-
     - name: Clone source code from github
       git:
         repo: 'https://github.com/devopshydclub/vprofile-project.git'
@@ -21,14 +20,12 @@
         version: vp-rem
       register: git_status
 
-
     - name: mvn install command to build artifact
       command: "mvn install"
       args:
         chdir: Vprofile-repo
       when: git_status.changed
       register: mvn_info
-
 
     - name: Copy artifacts to files directory
       copy:
