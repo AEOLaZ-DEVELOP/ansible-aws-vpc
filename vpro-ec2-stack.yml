@@ -210,7 +210,10 @@
 
           [mcsrvgrp]
           mc01
-
+          
+          [dbsrvgrp]
+          db01
+          
           [control]
           cntl
 
