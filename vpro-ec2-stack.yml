@@ -291,6 +291,8 @@
   hosts: localhost
   connection: local
   gather_facts: no
+  vars:
+    ssm_role_name: EC2-SSM-Role
   tasks:
     - name: Import VPC setup Variable
       include_vars: vars/vpc-output_vars
