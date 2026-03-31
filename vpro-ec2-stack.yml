@@ -254,7 +254,7 @@
       amazon.aws.ec2_security_group_info:
         region: "{{ region }}"
         filters:
-          group-name: vprostack-sg
+          group-name: vproStack-sg
           vpc-id: "{{ vpcid }}"
       register: sg_info
 
