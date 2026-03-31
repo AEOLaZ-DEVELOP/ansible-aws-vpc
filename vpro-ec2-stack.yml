@@ -234,7 +234,7 @@
 #         # web01
 
 ---
-- name: Create IAM role and mc01 with SSM
+- name: Create mc01 with SSM bootstrap
   hosts: localhost
   connection: local
   gather_facts: no
@@ -242,55 +242,19 @@
   vars:
     region: us-east-1
     ssm_role_name: EC2-SSM-Role
-    ssm_policy_arn: arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
 
   tasks:
     - name: Import VPC setup variables
-      include_vars: vars/vpc-output_vars   # ต้องมี vpcid, privsub1id อยู่ในไฟล์นี้
+      include_vars: vars/vpc-output_vars
 
-    - name: Import vprofile setup variables
-      include_vars: vars/vprostacksetup    # ต้องมี memcache_ami หรือ ami ของ mc01
+    - name: Import stack setup variables
+      include_vars: vars/vprostacksetup
 
-    - name: Create IAM role for EC2 SSM
-      amazon.aws.iam_role:
-        name: "{{ ssm_role_name }}"
-        assume_role_policy_document: |
-          {
-            "Version": "2012-10-17",
-            "Statement": [
-              {
-                "Effect": "Allow",
-                "Principal": {
-                  "Service": "ec2.amazonaws.com"
-                },
-                "Action": "sts:AssumeRole"
-              }
-            ]
-          }
-        managed_policies:
-          - "{{ ssm_policy_arn }}"
-        state: present
-
-    - name: Create instance profile
-      amazon.aws.iam_instance_profile:
-        name: "{{ ssm_role_name }}"
-        state: present
-
-    - name: Add role to instance profile
-      amazon.aws.iam_instance_profile:
-        name: "{{ ssm_role_name }}"
-        role: "{{ ssm_role_name }}"
-        state: present
-
-    - name: Wait for IAM propagation
-      pause:
-        seconds: 20
-
-    - name: Get existing vproStack-sg details
+    - name: Get vprostack SG details
       amazon.aws.ec2_security_group_info:
         region: "{{ region }}"
         filters:
-          group-name: vproStack-sg
+          group-name: vprostack-sg
           vpc-id: "{{ vpcid }}"
       register: sg_info
 
@@ -309,7 +273,6 @@
         subnet_id: "{{ privsub1id }}"
         user_data: |
           #!/bin/bash
-          set -eux
           snap install amazon-ssm-agent --classic || true
           systemctl enable amazon-ssm-agent || true
           systemctl start amazon-ssm-agent || true
@@ -320,10 +283,6 @@
           Owner: DevOps Team
         state: running
       register: mc01_out
-
-    - name: Wait for SSM registration
-      pause:
-        seconds: 60
 
     - name: Show mc01 details
       debug:
