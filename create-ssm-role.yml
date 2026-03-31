@@ -1,0 +1,43 @@
+---
+- name: Create IAM role for EC2 SSM
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  vars:
+    ssm_role_name: EC2-SSM-Role
+    ssm_policy_arn: arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+  tasks:
+    - name: Create IAM role for EC2 SSM
+      amazon.aws.iam_role:
+        name: "{{ ssm_role_name }}"
+        assume_role_policy_document: |
+          {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Principal": {
+                  "Service": "ec2.amazonaws.com"
+                },
+                "Action": "sts:AssumeRole"
+              }
+            ]
+          }
+        managed_policies:
+          - "{{ ssm_policy_arn }}"
+        state: present
+
+    - name: Create instance profile
+      amazon.aws.iam_instance_profile:
+        name: "{{ ssm_role_name }}"
+        state: present
+
+    - name: Add role to instance profile
+      amazon.aws.iam_instance_profile:
+        name: "{{ ssm_role_name }}"
+        role: "{{ ssm_role_name }}"
+        state: present
+
+    - name: Wait for IAM propagation
+      pause:
+        seconds: 20
