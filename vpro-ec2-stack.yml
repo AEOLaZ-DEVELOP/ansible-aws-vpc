@@ -407,7 +407,7 @@
               systemctl enable amazon-ssm-agent || true
               systemctl start amazon-ssm-agent || true
               systemctl restart amazon-ssm-agent || true
-        register: app01_out
+      register: app01_out
     - name: Show app01 details
       debug:
         msg:
