@@ -270,10 +270,10 @@
         state: present
 
     - name: Attach AmazonSSMManagedInstanceCore policy to role
-      amazon.aws.iam_policy:
-        iam_type: role
-        iam_name: "{{ ssm_role_name }}"
+      amazon.aws.iam_managed_policy_attachment:
         policy_arn: "{{ ssm_policy_arn }}"
+        roles:
+          - "{{ ssm_role_name }}"
         state: present
 
     - name: Create instance profile
