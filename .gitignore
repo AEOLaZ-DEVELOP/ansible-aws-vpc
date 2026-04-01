@@ -1,3 +1,5 @@
 *.pem
 provision-stack/files/
+provision-stack/inventory-ssm
+provision-stack/inventory-pro
 *.log
