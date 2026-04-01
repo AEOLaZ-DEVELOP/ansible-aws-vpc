@@ -492,22 +492,39 @@
         src: bastion-key.pem
         dest: provision-stack/loginkey_vpro.pem
         mode: '0400'
+    - name: Create temporary S3 bucket for Ansible over SSM
+      amazon.aws.s3_bucket:                                          
+          name: "{{ ssm_bucket_name }}"
+          state: present
+          region: "{{ aws_region }}"
     - name: Insert/Update Inventory file provision-stack/inventory-vpro
       blockinfile:
         path: provision-stack/inventory-vpro
         block: |
-          app01 ansible_host={{ app01_id }}
-          rmq01 ansible_host={{ rmq01_id }}
-          mc01 ansible_host={{ mc01_id }}
-          db01 ansible_host={{ db01_id }}
-          # web01 ansible_host={{ web01_id }}                
+          [appsrvgrp]
+          app01 ansible_host={{ app01_out.instances[0].instance_id }}
 
-          [all:vars]
-          ansible_connection=amazon.aws.aws_ssm
-          ansible_aws_ssm_region=us-east-1
-          ansible_aws_ssm_bucket_name=my-ansible-ssm-bucket
-          ansible_user=ssm-user
-          ansible_become=true
-          ansible_become_method=sudo
+          [rmqsrvgrp]
+          rmq01 ansible_host={{ rmq01_out.instances[0].instance_id }}
+
+          [mcsvrgrp]
+          mc01 ansible_host={{ mc01_out.instances[0].instance_id }}
+
+          [dbsrvgrp]
+          db01 ansible_host={{ db01_out.instances[0].instance_id }}        
+                  
+          [stack_inst:children]
+          appsrvgrp                                               
+          rmqsrvgrp                                               
+          mcsvrgrp                                                
+          dbsrvgrp                                                
+
+          [stack_inst:vars]
+          ansible_connection=amazon.aws.aws_ssm                   
+          ansible_aws_ssm_region={{ aws_region }}                 
+          ansible_aws_ssm_bucket_name={{ ssm_bucket_name }}       
+          ansible_user=ssm-user                                   
+          ansible_become=true                                     
+          ansible_become_method=sudo        
 
        
