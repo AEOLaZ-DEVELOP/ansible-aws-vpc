@@ -500,7 +500,7 @@
           region: "{{region}}"
     - name: Insert/Update Inventory file provision-stack/inventory-vpro
       blockinfile:
-        path: provision-stack/inventory-vpro
+        path: provision-stack/inventory-ssm
         block: |
           [appsrvgrp]
           app01 ansible_host={{ app01_out.instances[0].instance_id }}
