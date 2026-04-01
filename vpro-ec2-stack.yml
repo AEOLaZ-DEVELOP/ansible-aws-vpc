@@ -497,7 +497,7 @@
       amazon.aws.s3_bucket:                                          
           name: "{{ ssm_bucket_name }}"
           state: present
-          region: "{{ aws_region }}"
+          region: "{{region}}"
     - name: Insert/Update Inventory file provision-stack/inventory-vpro
       blockinfile:
         path: provision-stack/inventory-vpro
