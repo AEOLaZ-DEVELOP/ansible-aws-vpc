@@ -1,3 +1,4 @@
+# -------------- version original --------------
 # ---
 # - name: Setup Vprofile Stack
 #   hosts: localhost
@@ -233,59 +234,7 @@
 #         # [websrvgrp]
 #         # web01
 
-# ---
-# - name: Create mc01 with SSM bootstrap
-#   hosts: localhost
-#   connection: local
-#   gather_facts: no
-#   tasks:
-#     - name: Import VPC setup variables
-#       include_vars: vars/vpc-output_vars
-
-#     - name: Import stack setup variables
-#       include_vars: vars/vprostacksetup
-
-#     - name: Get vprostack SG details
-#       amazon.aws.ec2_security_group_info:
-#         region: "{{ region }}"
-#         filters:
-#           group-name: vproStack-sg
-#           vpc-id: "{{ vpcid }}"
-#       register: sg_info
-
-#     - name: Create mc01 with IAM role and SSM bootstrap
-#       amazon.aws.ec2_instance:
-#         name: mc01
-#         region: "{{ region }}"
-#         key_name: vprofile-key
-#         instance_type: t3.micro
-#         image_id: "{{ memcache_ami }}"
-#         wait: yes
-#         wait_timeout: 300
-#         iam_instance_profile: "{{ ssm_role_name }}"
-#         security_groups:
-#           - "{{ sg_info.security_groups[0].group_id }}"
-#         subnet_id: "{{ privsub1id }}"
-#         user_data: |
-#           #!/bin/bash
-#           snap install amazon-ssm-agent --classic || true
-#           systemctl enable amazon-ssm-agent || true
-#           systemctl start amazon-ssm-agent || true
-#           systemctl restart amazon-ssm-agent || true
-#         tags:
-#           Name: mc01
-#           Project: Vprofile
-#           Owner: DevOps Team
-#         state: running
-#       register: mc01_out
-
-#     - name: Show mc01 details
-#       debug:
-#         msg:
-#           - "mc01 instance id: {{ mc01_out.instances[0].instance_id }}"
-#           - "mc01 private ip: {{ mc01_out.instances[0].private_ip_address }}"
-#           - "IAM profile: {{ ssm_role_name }}"
-
+# -------------- version ssm modern for DevSecOps --------------
 ---
 - name: Setup Vprofile Stack
   hosts: localhost
@@ -547,43 +496,18 @@
       blockinfile:
         path: provision-stack/inventory-vpro
         block: |
-          app01 ansible_host={{ app01_out.instances[0].private_ip_address }}
-          rmq01 ansible_host={{ rmq01_out.instances[0].private_ip_address }}
-          mc01 ansible_host={{ mc01_out.instances[0].private_ip_address }}
-          db01 ansible_host={{ db01_out.instances[0].private_ip_address }}
+          app01 ansible_host={{ app01_id }}
+          rmq01 ansible_host={{ rmq01_id }}
+          mc01 ansible_host={{ mc01_id }}
+          db01 ansible_host={{ db01_id }}
+          # web01 ansible_host={{ web01_id }}                
 
-          cntl ansible_host=127.0.0.1 ansible_connection=local
+          [all:vars]
+          ansible_connection=amazon.aws.aws_ssm
+          ansible_aws_ssm_region=us-east-1
+          ansible_aws_ssm_bucket_name=my-ansible-ssm-bucket
+          ansible_user=ssm-user
+          ansible_become=true
+          ansible_become_method=sudo
 
-          [websrvgrp]
-          web01
-
-          [appsrvgrp]
-          app01
-
-          [rmqsrvgrp]
-          rmq01
-
-          [mcsrvgrp]
-          mc01
-          
-          [dbsrvgrp]
-          db01
-
-          [control]
-          cntl
-
-          [stack_inst:children]
-          websrvgrp
-          appsrvgrp
-          rmqsrvgrp
-          mcsrvgrp
-          dbsrvgrp
-
-          [stack_inst:vars]
-          ansible_user=ubuntu
-          ansible_ssh_private_key_file=loginkey_vpro.pem
-          #ansible_python_interpreter=/usr/bin/python3
-
-        # web01 ansible_host={{ web01_out.instances[0].private_ip_address }}
-        # [websrvgrp]
-        # web01
+       
