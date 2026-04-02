@@ -40,16 +40,43 @@
           {{ rmq01_ip }} rmq01
           {{ mc01_ip }} mc01
           {{ db01_ip }} db01
-      register: hosts_update_result
-    - name: Show blockinfile result
-      debug:
-        var: hosts_update_result
+    #   register: hosts_update_result
+    # - name: Show blockinfile result
+    #   debug:
+    #     var: hosts_update_result
 
-    - name: Verify entries exist in /etc/hosts
-      command: cat /etc/hosts
-      register: hosts_file_content
+    # - name: Verify entries exist in /etc/hosts
+    #   command: cat /etc/hosts
+    #   register: hosts_file_content
+    #   changed_when: false
+
+    # - name: Show /etc/hosts from each instance
+    #   debug:
+    #     msg: "{{ inventory_hostname }} /etc/hosts:\n{{ hosts_file_content.stdout }}"
+    - name: Verify app01 entry exists
+      command: grep -Fx "{{ app01_ip }} app01" /etc/hosts
+      register: verify_app01
       changed_when: false
 
-    - name: Show /etc/hosts from each instance
+    - name: Verify rmq01 entry exists
+      command: grep -Fx "{{ rmq01_ip }} rmq01" /etc/hosts
+      register: verify_rmq01
+      changed_when: false
+
+    - name: Verify mc01 entry exists
+      command: grep -Fx "{{ mc01_ip }} mc01" /etc/hosts
+      register: verify_mc01
+      changed_when: false
+
+    - name: Verify db01 entry exists
+      command: grep -Fx "{{ db01_ip }} db01" /etc/hosts
+      register: verify_db01
+      changed_when: false
+
+    - name: Show verification summary
       debug:
-        msg: "{{ inventory_hostname }} /etc/hosts:\n{{ hosts_file_content.stdout }}"
+        msg:
+          - "{{ inventory_hostname }} app01 rc={{ verify_app01.rc }}"
+          - "{{ inventory_hostname }} rmq01 rc={{ verify_rmq01.rc }}"
+          - "{{ inventory_hostname }} mc01 rc={{ verify_mc01.rc }}"
+          - "{{ inventory_hostname }} db01 rc={{ verify_db01.rc }}"
