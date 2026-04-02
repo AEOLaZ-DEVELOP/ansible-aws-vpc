@@ -234,7 +234,7 @@
 #         # [websrvgrp]
 #         # web01
 
-# -------------- version ssm modern for DevSecOps --------------
+# -------------- version modern support ssm for DevSecOps --------------
 ---
 - name: Setup Vprofile Stack
   hosts: localhost
