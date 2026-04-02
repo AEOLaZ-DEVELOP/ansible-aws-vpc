@@ -80,3 +80,13 @@
           - "{{ inventory_hostname }} rmq01 rc={{ verify_rmq01.rc }}"
           - "{{ inventory_hostname }} mc01 rc={{ verify_mc01.rc }}"
           - "{{ inventory_hostname }} db01 rc={{ verify_db01.rc }}"
+          
+    - name: Assert all host entries exist
+      assert:
+        that:
+          - verify_app01.rc == 0
+          - verify_rmq01.rc == 0
+          - verify_mc01.rc == 0
+          - verify_db01.rc == 0
+        fail_msg: "/etc/hosts verification failed on {{ inventory_hostname }}"
+        success_msg: "/etc/hosts verification passed on {{ inventory_hostname }}"
