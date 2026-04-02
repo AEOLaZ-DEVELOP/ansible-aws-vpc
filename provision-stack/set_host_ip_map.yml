@@ -40,3 +40,16 @@
           {{ rmq01_ip }} rmq01
           {{ mc01_ip }} mc01
           {{ db01_ip }} db01
+      register: hosts_update_result
+    - name: Show blockinfile result
+      debug:
+        var: hosts_update_result
+
+    - name: Verify entries exist in /etc/hosts
+      command: cat /etc/hosts
+      register: hosts_file_content
+      changed_when: false
+
+    - name: Show /etc/hosts from each instance
+      debug:
+        msg: "{{ inventory_hostname }} /etc/hosts:\n{{ hosts_file_content.stdout }}"
