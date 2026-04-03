@@ -1,0 +1,84 @@
+# ---------- version ssh ----------
+  # ---
+  # - name: Deploy SQL file on accounts db
+  #   hosts: dbsrvgrp
+  #   gather_facts: no
+  #   tasks:
+  #     - name: Copy SQL to dbsrv
+  #       copy:
+  #         src: files/db_backup.sql
+  #         dest: /tmp/db_backup.sql
+  #       tags:
+  #         - deploy
+
+  #     - name: Restoring DB
+  #       mysql_db:
+  #         name: "{{dbname}}"
+  #         login_user: "{{dbuser}}"
+  #         login_password: "{{dbpass}}"
+  #         state: import
+  #         target: /tmp/db_backup.sql
+  #       notify:
+  #         - Restart mysql
+  #       tags:
+  #         - deploy
+
+  #   handlers:
+  #     - name: Restart mysql
+  #       service:
+  #         name: mysql
+  #         state: restarted
+
+# ---------- version ssm ----------
+---
+-   name: Deploy SQL file on accounts db                        
+    hosts: dbsrvgrp                                             
+    become: yes                                                 
+    gather_facts: no                                            
+    tasks:
+        -   name: Test connectivity over SSM                    
+            ansible.builtin.ping:                               
+
+        -   name: Copy SQL to db server                         
+            copy:
+                src: files/db_backup.sql                        
+                dest: /tmp/db_backup.sql                        
+                mode: '0644'                                    
+            tags:
+                - deploy                                        
+
+        -   name: Restore accounts DB from SQL backup           
+            mysql_db:
+                name: "{{ dbname }}"                            
+                login_user: "{{ dbuser }}"                     
+                login_password: "{{ dbpass }}"                  
+                state: import                                   
+                target: /tmp/db_backup.sql                      
+            register: db_import_result                          
+            notify:
+                -   Restart mysql                               
+            tags:
+                -   deploy
+
+        -   name: Show DB import result                         
+            debug:
+                var: db_import_result
+
+        -   name: Verify SQL file exists on db server           
+            command: test -f /tmp/db_backup.sql
+            register: sql_file_check
+            changed_when: false
+
+        -   name: Assert SQL file was copied successfully       
+            assert:
+                that:
+                    -   sql_file_check.rc == 0
+                fail_msg: "SQL backup file was not found on {{ inventory_hostname }}"
+                success_msg: "SQL backup file exists on {{ inventory_hostname }}"
+
+    handlers:
+
+        -   name: Restart mysql                                 
+            service:
+                name: mysql                                     
+                state: restarted         
