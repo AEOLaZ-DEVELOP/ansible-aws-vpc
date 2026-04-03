@@ -1,0 +1,100 @@
+# ---------- version ssh ----------
+  # ---
+  # - name: Install Memcache, Start & enable SVC
+  #   hosts: mcsrvgrp
+  #   gather_facts: no
+  #   tasks:
+  #     - name: Install Memcache
+  #       apt:
+  #         name: memcached
+  #         state: present
+  #         update_cache: yes
+  #         cache_valid_time: 86400
+  #       tags:
+  #         - package
+
+  #     - name: Start & Enable Memcache
+  #       service:
+  #         name: memcached
+  #         state: started
+  #         enabled: yes
+  #       tags:
+  #         - svc
+
+  #     - name: Enable remote login to memecache
+  #       lineinfile:
+  #         path: /etc/memcached.conf
+  #         regexp: '^-l '
+  #         line: '-l 0.0.0.0'
+  #         backup: yes
+  #       notify:
+  #         - Restart memcached
+  #       tags:
+  #         - conf
+
+  #   handlers:
+  #     - name: Restart memcached
+  #       service:
+  #         name: memcached
+  #         state: restarted
+
+# ---------- version ssm ----------
+---
+- name: Install Memcache, Start & enable SVC
+  hosts: mcsrvgrp
+  become: yes
+  gather_facts: no
+
+  tasks:
+    - name: Test connectivity over SSM
+      ansible.builtin.ping:
+
+    - name: Install Memcache
+      apt:
+        name: memcached
+        state: present
+        update_cache: yes
+        cache_valid_time: 86400
+      tags:
+        - package
+
+    - name: Start & Enable Memcache
+      service:
+        name: memcached
+        state: started
+        enabled: yes
+      tags:
+        - svc
+
+    - name: Enable remote login to memcache
+      lineinfile:
+        path: /etc/memcached.conf
+        regexp: '^-l'
+        line: '-l 0.0.0.0'
+        backup: yes
+      notify:
+        - Restart memcached
+      tags:
+        - conf
+
+    - name: Verify memcached is listening on 0.0.0.0
+      command: grep -Fx -- "-l 0.0.0.0" /etc/memcached.conf
+      register: verify_memcached_conf
+      changed_when: false
+
+    - name: Show verification summary
+      debug:
+        msg: "{{ inventory_hostname }} memcached rc={{ verify_memcached_conf.rc }}"
+
+    - name: Assert memcached config exists
+      assert:
+        that:
+          - verify_memcached_conf.rc == 0
+        fail_msg: "memcached configuration verification failed on {{ inventory_hostname }}"
+        success_msg: "memcached configuration verification passed on {{ inventory_hostname }}"
+
+  handlers:
+    - name: Restart memcached
+      service:
+        name: memcached
+        state: restarted
