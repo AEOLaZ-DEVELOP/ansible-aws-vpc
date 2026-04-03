@@ -1,3 +1,5 @@
 *.pem
-provision-stack/files/
 *.log
+*.sql
+*.war
+provision-stack/files/
