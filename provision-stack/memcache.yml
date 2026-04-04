@@ -41,7 +41,7 @@
 # ---------- version ssm ----------
 ---
 - name: Install Memcache, Start & enable SVC
-  hosts: mcsrvgrp
+  hosts: mcsvrgrp
   become: yes
   gather_facts: no
 
