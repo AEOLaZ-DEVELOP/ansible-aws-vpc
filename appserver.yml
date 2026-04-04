@@ -1,0 +1,341 @@
+# ---------- version ssh ----------
+  # ---
+  # - name: Setup Tomcat8 & Deploy Artifact
+  #   hosts: appsrvgrp
+  #   #  gather_facts: no
+  #   vars:
+  #     timestamp: "{{ansible_date_time.date}}_{{ansible_date_time.hour}}_{{ansible_date_time.minute}}"
+  #     tom_url: https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.37/bin/apache-tomcat-8.5.37.tar.gz
+  #   tasks:
+  #     - name: Install JDK on Ubuntu 18/20
+  #       apt:
+  #         name: openjdk-8-jdk
+  #         state: present
+  #         update_cache: yes
+
+  #     - name: Download Tomcat Tar Ball/Binaries
+  #       get_url:
+  #         url: "{{tom_url}}"
+  #         dest: /tmp/tomcat-8.tar.gz
+
+  #     - name: Add tomcat group
+  #       group:
+  #         name: tomcat
+  #         state: present
+
+  #     - name: Add tomcat user
+  #       user:
+  #         name: tomcat
+  #         group: tomcat
+  #         shell: /bin/nologin
+  #         home: /usr/local/tomcat8
+
+  #     - file:
+  #         path: /tmp/tomcat8
+  #         state: directory
+
+  #     - name: Extract tomcat
+  #       unarchive:
+  #         src: /tmp/tomcat-8.tar.gz
+  #         dest: /tmp/tomcat8/
+  #         remote_src: yes
+  #         list_files: yes
+  #       register: unarchive_info
+
+  #     - debug:
+  #         msg: "{{unarchive_info.files[0].split('/')[0]}}"
+
+  #     - name: Synchronize /tmp/tomcat8/tomcat_cont /usr/local/tomcat8.
+  #       synchronize:
+  #         src: "/tmp/tomcat8/{{unarchive_info.files[0].split('/')[0]}}/"
+  #         dest: /usr/local/tomcat8/
+  #       delegate_to: "{{ inventory_hostname }}"
+
+  #     - name: Change ownership of /usr/local/tomcat8
+  #       file:
+  #         path: /usr/local/tomcat8
+  #         owner: tomcat
+  #         group: tomcat
+  #         recurse: yes
+
+  #     - name: Setup tomcat SVC file on ubuntu 16 and 18
+  #       template:
+  #         src: templates/tomcat8-ubuntu-svcfile.j2
+  #         dest: /etc/systemd/system/tomcat8.service
+  #         mode: "a+x"
+
+  #     - name: just force systemd to reread configs (2.4 and above)
+  #       systemd:
+  #         daemon_reload: yes
+
+  #     - name: Start & Enable tomcat SVC
+  #       service:
+  #         name: tomcat8
+  #         state: started
+  #         enabled: yes
+  #       tags:
+  #         - svc
+
+  #     - stat:
+  #         path: /usr/local/tomcat8/webapps/ROOT
+  #       register: artifact_stat
+  #       tags:
+  #         - deploy
+
+  #     - name: Stop tomcat8 svc
+  #       service:
+  #         name: tomcat8
+  #         state: stopped
+  #       tags:
+  #         - deploy
+
+  #     - name: Try Backup and Deploy
+  #       block:
+  #         - name: Archive ROOT dir with timestamp
+  #           archive:
+  #             path: /usr/local/tomcat8/webapps/ROOT
+  #             dest: "/opt/ROOT_{{timestamp}}.tgz"
+  #           when: artifact_stat.stat.exists
+  #           register: archive_info
+  #           tags:
+  #             - deploy
+
+  #         - name: copy ROOT dir with old_ROOT name
+  #           shell: cp -r ROOT old_ROOT
+  #           args:
+  #             chdir: /usr/local/tomcat8/webapps/
+
+  #         - name: Delete current artifact
+  #           file:
+  #             path: "{{item}}"
+  #             state: absent
+  #           when: archive_info.changed
+  #           loop:
+  #             - /usr/local/tomcat8/webapps/ROOT
+  #             - /usr/local/tomcat8/webapps/ROOT.war
+  #           tags:
+  #             - deploy
+
+  #         - name: Try deploy artifact else restore from previos old_ROOT
+  #           block:
+  #             - name: Deploy vprofile artifact
+  #               copy:
+  #                 src: files/ROOT.war
+  #                 dest: /usr/local/tomcat8/webapps/ROOT.war
+  #               register: deploy_info
+  #               tags:
+  #                 - deploy
+  #           rescue:
+  #             - shell: cp -r old_ROOT ROOT
+  #               args:
+  #                 chdir: /usr/local/tomcat8/webapps/
+
+  #       rescue:
+  #         - name: Start tomcat8 svc
+  #           service:
+  #             name: tomcat8
+  #             state: started
+
+  #     - name: Start tomcat8 svc
+  #       service:
+  #         name: tomcat8
+  #         state: started
+  #       when: deploy_info.changed
+  #       tags:
+  #         - deploy
+
+  #     - name: Wait until ROOT.war is extracted to ROOT directory
+  #       wait_for:
+  #         path: /usr/local/tomcat8/webapps/ROOT
+  #       tags:
+  #         - deploy
+
+  #     - name: Deploy web configuration file
+  #       template:
+  #         src: templates/application.j2
+  #         dest: /usr/local/tomcat8/webapps/ROOT/WEB-INF/classes/application.properties
+  #         force: yes
+  #       notify:
+  #         - Restart Tomcat
+  #       tags:
+  #         - deploy
+
+  #   handlers:
+  #     - name: Restart Tomcat
+  #       service:
+  #         name: tomcat8
+  #         state: restarted
+
+# ---------- version ssm ----------
+---
+- name: Setup Tomcat8 & Deploy Artifact
+  hosts: appsrvgrp
+  become: yes
+  gather_facts: yes
+
+  vars:
+    ansible_connection: community.aws.aws_ssm
+    ansible_aws_ssm_region: us-east-1
+    ansible_aws_ssm_bucket_name: my-ansible-ssm-bucket
+
+    timestamp: "{{ ansible_date_time.date }}_{{ ansible_date_time.hour }}_{{ ansible_date_time.minute }}"
+    tom_url: https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.37/bin/apache-tomcat-8.5.37.tar.gz
+
+  tasks:
+
+    - name: Test connectivity over SSM
+      ansible.builtin.ping:
+
+    - name: Install JDK on Ubuntu 18/20
+      apt:
+        name: openjdk-8-jdk
+        state: present
+        update_cache: yes
+
+    - name: Download Tomcat Tar Ball/Binaries
+      get_url:
+        url: "{{ tom_url }}"
+        dest: /tmp/tomcat-8.tar.gz
+
+    - name: Add tomcat group
+      group:
+        name: tomcat
+        state: present
+
+    - name: Add tomcat user
+      user:
+        name: tomcat
+        group: tomcat
+        shell: /bin/nologin
+        home: /usr/local/tomcat8
+
+    - name: Create temp directory
+      file:
+        path: /tmp/tomcat8
+        state: directory
+
+    - name: Extract tomcat
+      unarchive:
+        src: /tmp/tomcat-8.tar.gz
+        dest: /tmp/tomcat8/
+        remote_src: yes
+        list_files: yes
+      register: unarchive_info
+
+    - name: Show extracted folder
+      debug:
+        msg: "{{ unarchive_info.files[0].split('/')[0] }}"
+
+    - name: Copy tomcat to /usr/local
+      synchronize:
+        src: "/tmp/tomcat8/{{ unarchive_info.files[0].split('/')[0] }}/"
+        dest: /usr/local/tomcat8/
+      delegate_to: "{{ inventory_hostname }}"
+
+    - name: Change ownership
+      file:
+        path: /usr/local/tomcat8
+        owner: tomcat
+        group: tomcat
+        recurse: yes
+
+    - name: Setup tomcat service file
+      template:
+        src: templates/tomcat8-ubuntu-svcfile.j2
+        dest: /etc/systemd/system/tomcat8.service
+        mode: "a+x"
+
+    - name: Reload systemd
+      systemd:
+        daemon_reload: yes
+
+    - name: Start & Enable tomcat
+      service:
+        name: tomcat8
+        state: started
+        enabled: yes
+
+    - name: Check existing ROOT
+      stat:
+        path: /usr/local/tomcat8/webapps/ROOT
+      register: artifact_stat
+
+    - name: Stop tomcat before deploy
+      service:
+        name: tomcat8
+        state: stopped
+
+    - name: Backup and Deploy block
+      block:
+
+        - name: Backup existing ROOT
+          archive:
+            path: /usr/local/tomcat8/webapps/ROOT
+            dest: "/opt/ROOT_{{ timestamp }}.tgz"
+          when: artifact_stat.stat.exists
+          register: archive_info
+
+        - name: Copy ROOT to old_ROOT
+          shell: cp -r ROOT old_ROOT
+          args:
+            chdir: /usr/local/tomcat8/webapps/
+
+        - name: Delete old artifact
+          file:
+            path: "{{ item }}"
+            state: absent
+          when: archive_info.changed
+          loop:
+            - /usr/local/tomcat8/webapps/ROOT
+            - /usr/local/tomcat8/webapps/ROOT.war
+
+        - name: Deploy new artifact
+          block:
+            - name: Copy ROOT.war
+              copy:
+                src: files/ROOT.war
+                dest: /usr/local/tomcat8/webapps/ROOT.war
+              register: deploy_info
+
+          rescue:
+            - name: Restore old ROOT
+              shell: cp -r old_ROOT ROOT
+              args:
+                chdir: /usr/local/tomcat8/webapps/
+
+      rescue:
+        - name: Start tomcat if failed
+          service:
+            name: tomcat8
+            state: started
+
+    - name: Start tomcat after deploy
+      service:
+        name: tomcat8
+        state: started
+      when: deploy_info.changed
+
+    - name: Wait for ROOT extracted
+      wait_for:
+        path: /usr/local/tomcat8/webapps/ROOT
+
+    - name: Deploy application.properties
+      template:
+        src: templates/application.j2
+        dest: /usr/local/tomcat8/webapps/ROOT/WEB-INF/classes/application.properties
+        force: yes
+      notify:
+        - Restart Tomcat
+
+    - name: Verify tomcat service state
+      service_facts:
+
+    - name: Show tomcat status
+      debug:
+        msg: "tomcat8 state on {{ inventory_hostname }} = {{ ansible_facts.services['tomcat8.service'].state | default('unknown') }}"
+
+  handlers:
+    - name: Restart Tomcat
+      service:
+        name: tomcat8
+        state: restarted
